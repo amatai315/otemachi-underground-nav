@@ -265,7 +265,52 @@ def find_named_shapefiles(suffix):
     return [p for p in paths if os.path.normpath(NW_DIR) not in os.path.normpath(p)]
 
 
-poi_candidates = []  # (name, ordinal, px, py, source_desc)
+# 建物/路線フォルダのファイル名prefix(末尾のフロア部分を除いたもの)から、
+# UIに表示する路線名・建物名へのマッピング。「東改札」等の改札名は路線ごとに重複するため、
+# 出発地/目的地選択時に区別できるよう付加情報として使う。
+LINE_LABELS = {
+    "ChiyodaOtemati": "東京メトロ千代田線",
+    "MaruOtemati": "東京メトロ丸ノ内線",
+    "MitaOtemati": "都営三田線",
+    "Hanzo": "東京メトロ半蔵門線",
+    "Tozai": "東京メトロ東西線",
+    "MaruTokyo": "東京メトロ丸ノ内線(東京駅)",
+    "ChiyodaHibiya": "東京メトロ千代田線(日比谷駅)",
+    "ChiyodaNiju": "東京メトロ千代田線(二重橋前駅)",
+    "GinzaGinza": "東京メトロ銀座線(銀座駅)",
+    "HibiyaGinza": "東京メトロ日比谷線(銀座駅)",
+    "HibiyaHibiya": "東京メトロ日比谷線(日比谷駅)",
+    "HibiyaHigagin": "都営地下鉄(東銀座駅付近)",
+    "MaruGinza": "東京メトロ丸ノ内線(銀座駅)",
+    "MitaHibiya": "都営三田線(日比谷駅)",
+    "Yurakucho": "東京メトロ有楽町線",
+    "YurakuTika": "有楽町地下街",
+    "JRTokyoSta": "JR東京駅",
+    "MARUBIRU": "丸ビル",
+    "SHINMARUBIRU": "新丸の内ビル",
+    "TOKIA": "TOKIA",
+    "BRICK": "丸の内ブリックスクエア",
+    "EIRAKU": "イーヨ",
+    "MITSUUFJ": "三菱UFJ信託銀行本店ビル",
+    "OAZO": "丸の内オアゾ",
+    "MITSUBISHISHOJI": "三菱商事ビル",
+    "KITTE": "KITTE",
+    "KOUTUU": "東京交通会館",
+    "ITOCIA": "有楽町イトシア",
+    "MARION": "有楽町マリオン",
+    "OOTEMORI": "オーテモリ",
+    "FORUM": "東京国際フォーラム",
+    "TEKKOU": "鉄鋼ビルディング",
+}
+
+
+def line_label_for(prefix):
+    """'ChiyodaOtemati_B1' -> 'ChiyodaOtemati' -> '東京メトロ千代田線'(未知ならキーそのもの)。"""
+    key = prefix.rsplit("_", 1)[0]
+    return LINE_LABELS.get(key, key)
+
+
+poi_candidates = []  # (name, ordinal, px, py, prefix, source_desc)
 for suffix in ("Opening", "Facility"):
     for shp_path in find_named_shapefiles(suffix):
         dir_path = os.path.dirname(shp_path)
@@ -300,6 +345,7 @@ for suffix in ("Opening", "Facility"):
                     "ordinal": ordinal,
                     "x": rep.x,
                     "y": rep.y,
+                    "prefix": prefix,
                     "source": f"{prefix}_{suffix}#{idx}",
                 }
             )
@@ -329,16 +375,17 @@ for cand in poi_candidates:
         continue
     prev = best_for_node.get(best_nid)
     if prev is None or best_dist < prev[0]:
-        best_for_node[best_nid] = (best_dist, cand["name"], cand["source"])
+        best_for_node[best_nid] = (best_dist, cand["name"], cand["prefix"])
 
 pois = []
-for nid, (dist, name, source) in best_for_node.items():
+for nid, (dist, name, prefix) in best_for_node.items():
     n = node_local[nid]
     pois.append(
         {
             "id": nid,
             "nodeId": nid,
             "name": name,
+            "group": line_label_for(prefix),
             "floorOrdinal": n["floorOrdinal"],
             "x": n["x"],
             "y": n["y"],

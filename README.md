@@ -65,22 +65,11 @@ npm run build
 GitHub Pagesで公開済みです。
 
 - 公開URL: https://amatai315.github.io/otemachi-underground-nav/
-- Pages設定: Source = `gh-pages` ブランチ / `/(root)`(`gh-pages` npmパッケージが
-  ブランチを作成した際にGitHub側で自動的に有効化されました)
-
-### 再デプロイ手順(コードを更新した場合)
-
-`web/` に `gh-pages` パッケージを導入済みです。ビルドして `gh-pages` ブランチへ
-pushするだけで再公開されます。
-
-```bash
-cd web
-npm run deploy
-```
-
-内部的には `vite build && gh-pages -d dist` を実行し、`web/dist` の内容を
-`gh-pages` ブランチへコミット・pushします(mainブランチには影響しません)。
-数十秒〜1分程度でPages側のビルドが反映されます。
+- Pages設定: Source = GitHub Actions
+- デプロイは `.github/workflows/deploy.yml` により**自動化**されています。`master` ブランチに
+  pushすると、`web/` をビルドしてPagesへ公開するワークフローが自動的に走ります
+  (`workflow_dispatch` でActionsタブから手動再実行も可能)。手元で `npm run deploy` 等を
+  実行する必要はありません。
 
 `base: './'` により相対パスでビルドされているため、リポジトリ名やGitHubアカウント名が
 変わらない限り `vite.config.js` の変更は不要です。
@@ -88,10 +77,10 @@ npm run deploy
 ### 別アカウント/別リポジトリで新規にセットアップする場合
 
 1. GitHub上で新規リポジトリを作成し、ローカルのプロジェクトルートをそのリモートにpushする。
-2. `cd web && npm install -D gh-pages`(このリポジトリでは導入済み)。
-3. `npm run deploy` を実行する。
-4. 初回は数分待ってから、GitHubリポジトリの Settings → Pages で Source が
-   `gh-pages` ブランチになっていることを確認する(通常は自動で設定される)。
+2. `.github/workflows/deploy.yml` はこのリポジトリに含まれているので、そのままpushすれば
+   ワークフローが走る。
+3. GitHubリポジトリの Settings → Pages で Source が「GitHub Actions」になっていることを
+   確認する(ワークフローに `pages: write` 権限があるため、初回実行時に自動で設定されることが多い)。
 
 ## 既知の簡略化事項
 

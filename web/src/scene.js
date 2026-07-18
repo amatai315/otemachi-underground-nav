@@ -34,18 +34,23 @@ export function initScene(container) {
   scene.add(dir);
   scene.add(new THREE.HemisphereLight(0xffffff, 0x1a1a2e, 0.5));
 
-  // 視点は常に見下ろし(俯瞰)角度に固定し、1本指ドラッグ/マウス左ドラッグは
-  // 回転ではなく平行移動(パン)として扱う。カメラの初期位置と target の相対関係が
-  // そのまま俯瞰角度になり、回転を無効化しているのでパン中もこの角度は変わらない。
+  // 見下ろし(俯瞰)の煽り角(polar angle)は初期値に固定したまま、左右の回転(azimuth)と
+  // 平行移動(パン)の両方を有効にする。煽り角だけを固定することで、横から覗き込むような
+  // 角度にはならず、常に見下ろし視点を保ったまま視点を回せる。
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.target.set(0, -4, 0);
-  controls.enableRotate = false; // 俯瞰角度を固定(ユーザーが横倒しにできないようにする)
+  controls.update();
+  const fixedPolarAngle = controls.getPolarAngle();
+  controls.minPolarAngle = fixedPolarAngle;
+  controls.maxPolarAngle = fixedPolarAngle;
+  controls.enableRotate = true; // 左右回転(煽り角は固定なので実質は水平方向のみ)
   controls.enablePan = true; // ドラッグで平行移動
   controls.enableZoom = true; // ホイール/ピンチでズーム
   controls.screenSpacePanning = true;
-  controls.touches.ONE = THREE.TOUCH.PAN;
+  // タッチ: 1本指=回転、2本指=ズーム+パン。マウス: 左=回転、右=パン(three.jsデフォルト)。
+  controls.touches.ONE = THREE.TOUCH.ROTATE;
   controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
-  controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+  controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
   controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
   controls.minDistance = 20;
   controls.maxDistance = 500;

@@ -16,6 +16,32 @@ function groupByFloor(pois) {
   return [...groups.entries()].sort((a, b) => a[0] - b[0]);
 }
 
+// 「東改札」のような名称は路線ごとに重複するため、路線名(group)を付記して区別する。
+// 同じ路線・同じフロアに全く同じ名称が複数ある場合(同一改札の複数レーン等)は、
+// 選択肢として区別できるよう連番を付ける。
+function displayBase(poi) {
+  return poi.group ? `${poi.name}（${poi.group}）` : poi.name;
+}
+
+function assignDisplayLabels(pois) {
+  const counts = new Map();
+  for (const poi of pois) {
+    const base = displayBase(poi);
+    counts.set(base, (counts.get(base) || 0) + 1);
+  }
+  const seen = new Map();
+  for (const poi of pois) {
+    const base = displayBase(poi);
+    if (counts.get(base) === 1) {
+      poi.displayLabel = base;
+      continue;
+    }
+    const n = (seen.get(base) || 0) + 1;
+    seen.set(base, n);
+    poi.displayLabel = `${base}(${n})`;
+  }
+}
+
 export function setupUI({ pois, onRouteRequest }) {
   const btnStart = document.getElementById('btn-start');
   const btnGoal = document.getElementById('btn-goal');
@@ -31,6 +57,8 @@ export function setupUI({ pois, onRouteRequest }) {
   let activeTarget = null; // 'start' | 'goal'
 
   const grouped = groupByFloor(pois);
+  // 同一フロア内での名称重複(路線名を付けても区別できないもの)に連番を振る
+  for (const [, items] of grouped) assignDisplayLabels(items);
 
   function renderList() {
     pickerList.innerHTML = '';
@@ -44,15 +72,15 @@ export function setupUI({ pois, onRouteRequest }) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'poi-btn';
-        btn.textContent = poi.name;
+        btn.textContent = poi.displayLabel;
         btn.addEventListener('click', () => {
           if (activeTarget === 'start') {
             state.start = poi;
-            btnStart.textContent = poi.name;
+            btnStart.textContent = poi.displayLabel;
             btnStart.classList.add('chosen');
           } else {
             state.goal = poi;
-            btnGoal.textContent = poi.name;
+            btnGoal.textContent = poi.displayLabel;
             btnGoal.classList.add('chosen');
           }
           closePicker();
