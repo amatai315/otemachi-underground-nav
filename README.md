@@ -61,39 +61,37 @@ npm run build
 
 ## GitHub Pagesへのデプロイ
 
-まだGitHubリモートが存在しない前提の手順です。
+このリポジトリは https://github.com/amatai315/otemachi-underground-nav にあり、
+GitHub Pagesで公開済みです。
 
-1. GitHub上で新規リポジトリを作成する(例: `otemachi-underground-nav`)。
-2. ローカルでこのプロジェクトルートを git 管理下にし、リモートを追加してpushする。
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/<your-account>/otemachi-underground-nav.git
-   git push -u origin main
-   ```
-3. `web/` ディレクトリに `gh-pages` パッケージを導入し、`web/dist` を `gh-pages` ブランチへ
-   公開する。
-   ```bash
-   cd web
-   npm install -D gh-pages
-   ```
-   `web/package.json` の `scripts` に以下を追加する:
-   ```json
-   "deploy": "vite build && gh-pages -d dist"
-   ```
-   実行:
-   ```bash
-   npm run deploy
-   ```
-4. GitHubリポジトリの Settings → Pages で、Source を「Deploy from a branch」、
-   Branch を `gh-pages` / `/(root)` に設定する。
-5. しばらくすると `https://<your-account>.github.io/otemachi-underground-nav/` で
-   公開される。スマホでアクセスして動作確認する。
+- 公開URL: https://amatai315.github.io/otemachi-underground-nav/
+- Pages設定: Source = `gh-pages` ブランチ / `/(root)`(`gh-pages` npmパッケージが
+  ブランチを作成した際にGitHub側で自動的に有効化されました)
 
-`base: './'` により相対パスでビルドされているため、リポジトリ名をURLに合わせて
-`vite.config.js` を書き換える必要はありません。
+### 再デプロイ手順(コードを更新した場合)
+
+`web/` に `gh-pages` パッケージを導入済みです。ビルドして `gh-pages` ブランチへ
+pushするだけで再公開されます。
+
+```bash
+cd web
+npm run deploy
+```
+
+内部的には `vite build && gh-pages -d dist` を実行し、`web/dist` の内容を
+`gh-pages` ブランチへコミット・pushします(mainブランチには影響しません)。
+数十秒〜1分程度でPages側のビルドが反映されます。
+
+`base: './'` により相対パスでビルドされているため、リポジトリ名やGitHubアカウント名が
+変わらない限り `vite.config.js` の変更は不要です。
+
+### 別アカウント/別リポジトリで新規にセットアップする場合
+
+1. GitHub上で新規リポジトリを作成し、ローカルのプロジェクトルートをそのリモートにpushする。
+2. `cd web && npm install -D gh-pages`(このリポジトリでは導入済み)。
+3. `npm run deploy` を実行する。
+4. 初回は数分待ってから、GitHubリポジトリの Settings → Pages で Source が
+   `gh-pages` ブランチになっていることを確認する(通常は自動で設定される)。
 
 ## 既知の簡略化事項
 
