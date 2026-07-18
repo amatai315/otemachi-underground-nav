@@ -1,0 +1,18 @@
+# 元データ(展開済みShapefileを含む)。ライセンス上、再配布可否が明確でないため除外。
+# scripts/build_geojson.py を手元で実行し、web/src/data/ の変換済みJSONのみをコミットする。
+/raw-data/
+
+# データパイプラインの実行ログ
+scripts/build_report.txt
+
+# Node / Vite
+web/node_modules/
+web/dist/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
